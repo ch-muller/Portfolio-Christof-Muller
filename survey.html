@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mini-Umfrage</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 50px auto; text-align: center; }
+    button { margin: 10px; padding: 10px 20px; cursor: pointer; }
+    #results { margin-top: 30px; font-size: 1.2em; }
+  </style>
+</head>
+<body>
+  <h2>Do you believe that the access to very frequented Nature Sites should be limited?</h2>
+  <div id="buttons">
+    <button onclick="vote('yes')">Yes</button>
+    <button onclick="vote('maybe')">Maybe</button>
+    <button onclick="vote('no')">No</button>
+  </div>
+
+  <div id="results"></div>
+
+  <script>
+    const votes = JSON.parse(localStorage.getItem('votes')) || { yes: 0, maybe: 0, no: 0 };
+
+    function vote(option) {
+      votes[option]++;
+      localStorage.setItem('votes', JSON.stringify(votes));
+      showResults();
+    }
+
+    function showResults() {
+      const total = votes.yes + votes.maybe + votes.no;
+      if (total === 0) {
+        document.getElementById('results').innerHTML = "No votes yet.";
+        return;
+      }
+      document.getElementById('results').innerHTML =
+        `<p>Results:</p>
+         <p>Yes: ${(votes.yes / total * 100).toFixed(1)}%<br>
+         Maybe: ${(votes.maybe / total * 100).toFixed(1)}%<br>
+         No: ${(votes.no / total * 100).toFixed(1)}%</p>`;
+    }
+
+    showResults();
+  </script>
+  <p><a href="index.html">go back to the main page</a></p>
+</body>
+</html>
