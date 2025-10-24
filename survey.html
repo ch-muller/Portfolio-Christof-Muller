@@ -48,47 +48,51 @@
   <canvas id="chart" width="400" height="200"></canvas>
 
   <script>
-    const votes = JSON.parse(localStorage.getItem('votes')) || { yes: 0, maybe: 0, no: 0 };
-    let chart;
+let chart;
 
-    function vote(option) {
-      votes[option]++;
-      localStorage.setItem('votes', JSON.stringify(votes));
-      updateDisplay();
+async function vote(option) {
+  // Send vote to Vercel Function (api/vote.js)
+  await fetch('/api/vote', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ option })
+  });
+  updateDisplay(); // refresh chart + counter
+}
+
+async function updateDisplay() {
+  const response = await fetch('/api/vote');
+  const { votes } = await response.json();
+
+  const total = votes.yes + votes.maybe + votes.no;
+  const resultsDiv = document.getElementById('results');
+
+  resultsDiv.textContent = total === 0
+    ? "No votes yet."
+    : `${total} ${total === 1 ? "person has" : "people have"} voted so far.`;
+
+  // Draw chart
+  if (chart) chart.destroy();
+  const ctx = document.getElementById('chart').getContext('2d');
+  chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Yes', 'Not sure', 'No'],
+      datasets: [{
+        data: [votes.yes, votes.maybe, votes.no],
+        backgroundColor: ['#4caf50', '#ffcc00', '#f44336']
+      }]
+    },
+    options: {
+      scales: { y: { beginAtZero: true } },
+      plugins: { legend: { display: false } }
     }
+  });
+}
 
-    function updateDisplay() {
-      const total = votes.yes + votes.maybe + votes.no;
-      const resultsDiv = document.getElementById('results');
-      if (total === 0) {
-        resultsDiv.textContent = "No votes yet.";
-      } else {
-        resultsDiv.textContent = `${total} ${total === 1 ? "person has" : "people have"} voted so far.`;
-      }
+// initial call
+updateDisplay();
+</script>
 
-      const data = [votes.yes, votes.maybe, votes.no];
-      const labels = ['Yes', 'Not sure', 'No'];
-
-      if (chart) chart.destroy(); // remove old chart
-      const ctx = document.getElementById('chart').getContext('2d');
-      chart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Votes',
-            data,
-            backgroundColor: ['#4caf50', '#ffcc00', '#f44336'],
-          }]
-        },
-        options: {
-          scales: { y: { beginAtZero: true, precision: 0 } },
-          plugins: { legend: { display: false } }
-        }
-      });
-    }
-
-    updateDisplay();
-  </script>
 </body>
 </html>
