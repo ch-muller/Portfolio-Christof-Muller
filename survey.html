@@ -1,49 +1,94 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mini-Umfrage</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mini Survey: Nature Photography</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: 50px auto; text-align: center; }
-    button { margin: 10px; padding: 10px 20px; cursor: pointer; }
-    #results { margin-top: 30px; font-size: 1.2em; }
+    body {
+      font-family: system-ui, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      text-align: center;
+    }
+    button {
+      margin: 8px;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      background: #0066cc;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #004d99;
+    }
+    #results {
+      margin-top: 30px;
+      font-size: 1rem;
+    }
+    canvas {
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
-  <h2>Do you believe that the access to very frequented Nature Sites should be limited?</h2>
+  <h2>Do you believe that nature photography can help raise awareness about environmental protection?</h2>
+  <p>(This survey is anonymous – no personal data is collected or stored.)</p>
+
   <div id="buttons">
     <button onclick="vote('yes')">Yes</button>
-    <button onclick="vote('maybe')">Maybe</button>
+    <button onclick="vote('maybe')">Not sure</button>
     <button onclick="vote('no')">No</button>
   </div>
 
   <div id="results"></div>
+  <canvas id="chart" width="400" height="200"></canvas>
 
   <script>
     const votes = JSON.parse(localStorage.getItem('votes')) || { yes: 0, maybe: 0, no: 0 };
+    let chart;
 
     function vote(option) {
       votes[option]++;
       localStorage.setItem('votes', JSON.stringify(votes));
-      showResults();
+      updateDisplay();
     }
 
-    function showResults() {
+    function updateDisplay() {
       const total = votes.yes + votes.maybe + votes.no;
+      const resultsDiv = document.getElementById('results');
       if (total === 0) {
-        document.getElementById('results').innerHTML = "No votes yet.";
-        return;
+        resultsDiv.textContent = "No votes yet.";
+      } else {
+        resultsDiv.textContent = `${total} ${total === 1 ? "person has" : "people have"} voted so far.`;
       }
-      document.getElementById('results').innerHTML =
-        `<p>Results:</p>
-         <p>Yes: ${(votes.yes / total * 100).toFixed(1)}%<br>
-         Maybe: ${(votes.maybe / total * 100).toFixed(1)}%<br>
-         No: ${(votes.no / total * 100).toFixed(1)}%</p>`;
+
+      const data = [votes.yes, votes.maybe, votes.no];
+      const labels = ['Yes', 'Not sure', 'No'];
+
+      if (chart) chart.destroy(); // remove old chart
+      const ctx = document.getElementById('chart').getContext('2d');
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{
+            label: 'Votes',
+            data,
+            backgroundColor: ['#4caf50', '#ffcc00', '#f44336'],
+          }]
+        },
+        options: {
+          scales: { y: { beginAtZero: true, precision: 0 } },
+          plugins: { legend: { display: false } }
+        }
+      });
     }
 
-    showResults();
+    updateDisplay();
   </script>
-  <p><a href="index.html">go back to the main page</a></p>
 </body>
 </html>
