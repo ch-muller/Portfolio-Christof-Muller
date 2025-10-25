@@ -1,11 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import type { ChartType } from 'chart.js';
 import Chart from 'chart.js/auto';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
+type ChartInstance = Chart<ChartType>;
+interface VoteResponse {
+  votes: {
+    yes: number;
+    maybe: number;
+    no: number;
+  };
+}
+
 export default function Survey() {
-  const [chart, setChart] = useState(null);
+  const [chart, setChart] = useState<ChartInstance | null>(null);
 
   async function vote(option) {
     // Check for previous vote
@@ -43,7 +53,10 @@ export default function Survey() {
           : `${total} ${total === 1 ? "person has" : "people have"} voted so far.`;
 
       if (chart) chart.destroy();
-      const ctx = document.getElementById('chart').getContext('2d');
+      const canvas = document.getElementById('chart') as HTMLCanvasElement;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+      
       const newChart = new Chart(ctx, {
         type: 'pie',
         data: {
@@ -59,8 +72,8 @@ export default function Survey() {
             datalabels: {
               color: '#fff',
               font: { weight: 'bold', size: 14 },
-              formatter: (value, ctx) => {
-                const dataArr = ctx.chart.data.datasets[0].data;
+              formatter: (value: number) => {
+                const dataArr = [votes.yes, votes.maybe, votes.no];
                 const sum = dataArr.reduce((a, b) => a + b, 0);
                 const percentage = sum === 0 ? "0%" : ((value / sum) * 100).toFixed(1) + "%";
                 return percentage;
