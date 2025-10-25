@@ -7,6 +7,7 @@ const nextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
+  distDir: '.next',
   // Configure for serverless deployment
   images: {
     unoptimized: true,
