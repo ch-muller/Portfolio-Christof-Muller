@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mini Survey: Nature Photography</title>
+
+  <!-- Chart.js & DataLabels Plugin -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
 
@@ -24,16 +26,13 @@
       cursor: pointer;
       transition: background 0.3s;
     }
-    button:hover {
-      background: #004d99;
+    button:hover { background: #004d99; }
+    button:disabled {
+      background: #999;
+      cursor: not-allowed;
     }
-    #results {
-      margin-top: 30px;
-      font-size: 1rem;
-    }
-    canvas {
-      margin-top: 20px;
-    }
+    #results { margin-top: 30px; font-size: 1rem; }
+    canvas { margin-top: 20px; }
   </style>
 </head>
 <body>
@@ -53,12 +52,21 @@
     let chart;
 
     async function vote(option) {
+      // 🧩 LocalStorage-Sperre gegen Mehrfachabstimmung
+      if (localStorage.getItem('voted-nature')) {
+        alert("You already voted — thank you!");
+        return;
+      }
+
       await fetch('/api/vote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ option })
       });
-      updateDisplay(); // refresh chart + counter
+
+      localStorage.setItem('voted-nature', 'true'); // Stimme merken
+      disableButtons();
+      updateDisplay();
     }
 
     async function updateDisplay() {
@@ -67,14 +75,12 @@
 
       const total = votes.yes + votes.maybe + votes.no;
       const resultsDiv = document.getElementById('results');
+      resultsDiv.textContent =
+        total === 0
+          ? "No votes yet."
+          : `${total} ${total === 1 ? "person has" : "people have"} voted so far.`;
 
-      resultsDiv.textContent = total === 0
-        ? "No votes yet."
-        : `${total} ${total === 1 ? "person has" : "people have"} voted so far.`;
-
-      // Draw chart
       if (chart) chart.destroy();
-
       const ctx = document.getElementById('chart').getContext('2d');
       chart = new Chart(ctx, {
         type: 'pie',
@@ -87,15 +93,10 @@
         },
         options: {
           plugins: {
-            legend: {
-              position: 'bottom'
-            },
+            legend: { position: 'bottom' },
             datalabels: {
               color: '#fff',
-              font: {
-                weight: 'bold',
-                size: 14
-              },
+              font: { weight: 'bold', size: 14 },
               formatter: (value, ctx) => {
                 const dataArr = ctx.chart.data.datasets[0].data;
                 const sum = dataArr.reduce((a, b) => a + b, 0);
@@ -107,7 +108,15 @@
         },
         plugins: [ChartDataLabels]
       });
-    } 
+    }
+
+    function disableButtons() {
+      document.querySelectorAll('button').forEach(btn => btn.disabled = true);
+    }
+
+    // ✅ Beim Laden prüfen, ob bereits abgestimmt wurde
+    if (localStorage.getItem('voted-nature')) disableButtons();
+
     updateDisplay();
   </script>
 </body>
