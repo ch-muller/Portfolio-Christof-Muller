@@ -1,5 +1,5 @@
 // api/vote.js
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
   global.votes = global.votes || { yes: 0, maybe: 0, no: 0 };
 
   if (req.method === 'POST') {
@@ -15,4 +15,4 @@ export default async function handler(req, res) {
   }
 
   res.status(405).json({ message: 'Method not allowed' });
-}
+};
