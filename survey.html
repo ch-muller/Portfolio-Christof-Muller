@@ -72,23 +72,41 @@ async function updateDisplay() {
     : `${total} ${total === 1 ? "person has" : "people have"} voted so far.`;
 
   // Draw chart
-  if (chart) chart.destroy();
-  const ctx = document.getElementById('chart').getContext('2d');
-  chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: ['Yes', 'Not sure', 'No'],
-      datasets: [{
-        data: [votes.yes, votes.maybe, votes.no],
-        backgroundColor: ['#4caf50', '#ffcc00', '#f44336']
-      }]
-    },
-    options: {
-      scales: { y: { beginAtZero: true } },
-      plugins: { legend: { display: false } }
+if (chart) chart.destroy();
+
+const ctx = document.getElementById('chart').getContext('2d');
+chart = new Chart(ctx, {
+  type: 'pie',  // oder 'doughnut'
+  data: {
+    labels: ['Yes', 'Not sure', 'No'],
+    datasets: [{
+      data: [votes.yes, votes.maybe, votes.no],
+      backgroundColor: ['#4caf50', '#ffcc00', '#f44336']
+    }]
+  },
+  options: {
+    plugins: {
+      legend: {
+        position: 'bottom' // optional
+      },
+      datalabels: {
+        color: '#fff',
+        font: {
+          weight: 'bold',
+          size: 14
+        },
+        formatter: (value, ctx) => {
+          const dataArr = ctx.chart.data.datasets[0].data;
+          const sum = dataArr.reduce((a, b) => a + b, 0);
+          const percentage = ((value / sum) * 100).toFixed(1) + "%";
+          return percentage;
+        }
+      }
     }
-  });
-}
+  },
+  plugins: [ChartDataLabels]
+});
+
 
 // initial call
 updateDisplay();
